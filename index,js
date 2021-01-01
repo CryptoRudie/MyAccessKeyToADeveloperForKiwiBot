@@ -1,0 +1,132 @@
+const discord = require("discord.js"),
+color = require('chalk'),
+client = new discord.Client()
+
+client.on('ready', () => {
+console.log(color.red(`${client.user.tag} is Ready!`))
+});
+
+client.on('message', async message => {
+const prefix = "!"
+if (!message.channel.type === "guild") return
+if (message.author.bot) return
+if (!message.content.startsWith(prefix)) return
+const messageArray = message.content.split(" ")
+const command = messageArray[0].slice(prefix.length).toLowerCase()
+const args = message.content.slice(messageArray[0].length)
+
+if (command === "help") {
+  let helpEmbed = new discord.MessageEmbed()
+  .setAuthor(message.author.tag, message.author.displayAvatarURL({size: 1024, format: "png"}))
+  .setTitle("TestBot - Help Embed")
+  .setColor("#00ff00")
+  .addField("Utility", "`!utility` | Get the Commands of Utility Category.")
+  .addField("Moderation", "`!moderation` | Get the Commands of Moderation Category.")
+  .setTimestamp()
+  message.channel.send(helpEmbed)
+} else if (command === "utility") {
+  let utilityHelpEmbed = new discord.MessageEmbed()
+  .setAuthor(message.author.tag, message.author.displayAvatarURL({size: 1024, format: "png"}))
+  .setTitle("TestBot - Utility Help Embed")
+  .setColor("#00ff00")
+  .addField("Ping Command", "`!ping` | Get the bot ping.")
+  .addField("Say Command", "`!say <toSay>` | Make the bot say something.")
+  .addField("Embed Command", "`!embed <color> <description>` | Make an embed.")
+  .setTimestamp()
+  message.channel.send(utilityHelpEmbed)
+} else if (command === "ping") {
+  var pingEmbed = new discord.MessageEmbed()
+  .setColor("#ff0000")
+  .setDescription("<a:8104LoadingEmote:794536347762819122> Pinging!")
+  var msg = await message.channel.send(pingEmbed)
+  setTimeout( async () => {
+  pingEmbed.setDescription("<a:8104LoadingEmote:794536347762819122> Connection Received!")
+  var msg2 = await msg.edit(pingEmbed)
+  setTimeout( async () => {
+  pingEmbed.setDescription(`<a:check:771023611648933909> Pong! ${client.ws.ping}ms`)
+  pingEmbed.setColor("#00ff00")
+  msg2.edit(pingEmbed)
+  }, 2500);
+  }, 1000);
+
+} else if (command === "say") {
+  if (!args.slice(1)) return message.reply("You did not tell me what to say!")
+  message.channel.send(args)
+} else if (command === "embed") {
+  const color = args.split(" ")[1]
+  if (!color) return message.reply("Incorrect Usage! `!embed <color> <description>`")
+  const description = args.slice(color.length).slice(1)
+  if (!description) return message.reply("Incorrect Usage! `!embed <color> <description>`")
+  let emb = new discord.MessageEmbed()
+  .setDescription(description)
+  .setColor(color)
+  message.channel.send(emb)
+} else if (command === "moderation") {
+  let moderationHelpEmbed = new discord.MessageEmbed()
+  .setAuthor(message.author.tag, message.author.displayAvatarURL({size: 1024, format: "png"}))
+  .setTitle("TestBot - Moderation Help Embed")
+  .setColor("#00ff00")
+  .addField("Ban Command", "`!ban <user> <optionalReason>` | Bans a user from your server!")
+  .addField("Kick Command", "`!kick <user> <optionalReason>` | Kicks a user from your server!")
+  .setTimestamp()
+  message.channel.send(moderationHelpEmbed)
+} else if (command === "ban") {
+var member = message.mentions.members.first()
+var user = message.mentions.users.first()
+
+if (!message.member.hasPermission("ADMINISTRATOR")) return message.reply("You need Administrator permission to use this command!") 
+
+
+if (!user && !member) return message.reply("You did not mention a user to ban!")
+
+if (!message.guild.me.hasPermission('ADMINISTRATOR')) message.reply("Please give me Administrator so that I can ban the user!")
+
+if (message.author.id === user.id) return message.reply("Sorry but you can't ban yourself!")
+
+if (!member.bannable) return message.reply("I cannot ban that user because their highest role is higher than my highest role in the Role Hiearchy!")
+
+var reason = args.slice(message.mentions.users.first().length).split(">")[1]
+
+let banEmbed = new discord.MessageEmbed()
+.setTitle('Member Banned!')
+.setColor("#00ff00")
+.setDescription(`Succesfully banned ${member.displayName}`)
+.addField('Reason', reason || "None")
+.addField('Banned User', `${user.username}#${user.discriminator}`, true)
+.addField('Banned By', `${message.author.username}#${message.author.discriminator}`, true)
+
+await member.ban()
+await message.channel.send(banEmbed)
+
+} else if (command === "kick") {
+  var member = message.mentions.members.first()
+var user = message.mentions.users.first()
+
+if (!message.member.hasPermission("ADMINISTRATOR")) return message.reply("You need Administrator permission to use this command!") 
+
+
+if (!user && !member) return message.reply("You did not mention a user to kick!")
+
+if (!message.guild.me.hasPermission('ADMINISTRATOR')) message.reply("Please give me Administrator so that I can kick the user!")
+
+if (message.author.id === user.id) return message.reply("Sorry but you can't kick yourself!")
+
+if (!member.kickable) return message.reply("I cannot kick that user because their highest role is higher than my highest role in the Role Hiearchy!")
+
+var reason = args.slice(message.mentions.users.first().length).split(">")[1]
+
+let kickEmbed = new discord.MessageEmbed()
+.setTitle('Member Kicked!')
+.setColor("#00ff00")
+.setDescription(`Succesfully Kicked ${member.displayName}`)
+.addField('Reason', reason || "None")
+.addField('Kicked User', `${user.username}#${user.discriminator}`, true)
+.addField('Kicked By', `${message.author.username}#${message.author.discriminator}`, true)
+
+await member.kick()
+await message.channel.send(kickEmbed)
+}
+});
+
+
+client.login(process.env.TOKEN)
